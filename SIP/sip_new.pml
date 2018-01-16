@@ -13,11 +13,13 @@ chan proxy2agent[2] = [4] of { mtype };
 chan proxy2proxy[2] = [4] of { mtype };
 chan agent2agent[2] = [4] of { mtype };
 bool invitesent[2];
+bool cancelsent[2];
 
 
 proctype agent(byte i) {
     byte j = (i + 1) % 2;
     invitesent[i]=0;
+    cancelsent[i]=0;
 	/* idle: choose client or server behavior */
 	idle:
 	    if
@@ -26,9 +28,9 @@ proctype agent(byte i) {
 	    :: agent2agent[i]?ack -> goto media_session_server;	
 	    :: proxy2agent[i]?sessionProgress -> do 
 		                                     :: goto waiting_for_ok;						/* session progress */
-		                                     :: atomic{agent2proxy[i]!cancel; goto waiting_for_canceled;}	/* cancel session initiation */
+		                                     :: atomic{cancelsent[i] == 0 ->agent2proxy[i]!cancel; cancelsent[i]=1; goto waiting_for_canceled;}	/* cancel session initiation */
 		                                     od;
-	    :: proxy2agent[i]?canceled -> atomic{invitesent[i]=0; goto idle;} /* her invite canceled, I goback for server to idle, my invite canceled. */
+	    :: proxy2agent[i]?canceled -> atomic{invitesent[i]=0; cancelsent[i]=0; goto idle;} /* her invite canceled, I goback for server to idle, my invite canceled. */
 		:: invitesent[i] == 0 -> goto inviting; 					
 		fi;
 	/* client behavior */
@@ -36,7 +38,7 @@ proctype agent(byte i) {
 		if
 		:: atomic{agent2proxy[i]!invite; invitesent[i]=1; do
 		                                                  :: goto waiting_for_trying; 
-		                                                  :: atomic{agent2proxy[i]!cancel; goto waiting_for_canceled;}	/* cancel session initiation */
+		                                                  :: atomic{cancelsent[i] == 0 ->agent2proxy[i]!cancel; cancelsent[i]=1; goto waiting_for_canceled;}	/* cancel session initiation */
 		                                                  od;}						
 		fi;
 	waiting_for_trying:
@@ -47,7 +49,7 @@ proctype agent(byte i) {
 		:: agent2agent[i]?byeOk -> atomic{invitesent[j]=0; goto waiting_for_trying;}
 		:: proxy2agent[i]?trying -> do 
 		                            :: goto waiting_for_session_progress;		/* receive trying from proxy */
-		                            :: atomic{agent2proxy[i]!cancel; goto waiting_for_canceled;}	/* cancel session initiation */
+		                            :: atomic{cancelsent[i] == 0 ->agent2proxy[i]!cancel; cancelsent[i]=1; goto waiting_for_canceled;}	/* cancel session initiation */
 		                            od;	
 		fi;
 	waiting_for_session_progress:
@@ -58,7 +60,7 @@ proctype agent(byte i) {
 		:: agent2agent[i]?byeOk -> atomic{invitesent[j]=0;goto waiting_for_session_progress;}
 		:: proxy2agent[i]?sessionProgress -> do 
 		                                     :: goto waiting_for_ok;						/* session progress */
-		                                     :: atomic{agent2proxy[i]!cancel; goto waiting_for_canceled;}	/* cancel session initiation */
+		                                     :: atomic{cancelsent[i] == 0 ->agent2proxy[i]!cancel; cancelsent[i]=1; goto waiting_for_canceled;}	/* cancel session initiation */
 		                                     od;
 
 		:: proxy2agent[i]?serverError -> invitesent[i]=0; goto idle;					/* server error */
@@ -71,7 +73,7 @@ proctype agent(byte i) {
 		:: agent2agent[i]?byeOk -> atomic{invitesent[j]=0; goto waiting_for_ok;}
 		:: proxy2agent[i]?ok -> do 
 		                        :: atomic {agent2agent[j]!ack; goto media_session_client;}				/* session is initiated */
-		                        :: atomic{agent2proxy[i]!cancel; goto waiting_for_canceled;}	/* cancel session initiation */
+		                        :: atomic{cancelsent[i] == 0 ->agent2proxy[i]!cancel; cancelsent[i]=1; goto waiting_for_canceled;}	/* cancel session initiation */
 		                        od;
 	    :: proxy2agent[i]?inviteFail -> invitesent[i]=0; goto idle;					/* invitation rejected */
 		fi;
@@ -94,23 +96,23 @@ proctype agent(byte i) {
 	    :: proxy2agent[i]?inviteFail -> goto waiting_for_canceled;
 	    :: agent2agent[i]?byeOk -> atomic{invitesent[j]=0; goto waiting_for_bye;}
 	    :: proxy2agent[i]?canceling -> goto waiting_for_canceled;
-	    :: proxy2agent[i]?canceled -> atomic{invitesent[i]=0; goto idle;}	    
+	    :: proxy2agent[i]?canceled -> atomic{invitesent[i]=0; cancelsent[i]=0; goto idle;}	    
 	    fi;
 	/* server behavior */	
 	invite_status:
 	    if
 	    :: proxy2agent[i]?trying -> do 
 		                            :: goto waiting_for_session_progress;		/* receive trying from proxy */
-		                            :: atomic{agent2proxy[i]!cancel; goto waiting_for_canceled;}	/* cancel session initiation */
+		                            :: atomic{cancelsent[i] == 0 ->agent2proxy[i]!cancel; cancelsent[i]=1; goto waiting_for_canceled;}	/* cancel session initiation */
 		                            od;	
 	    :: proxy2agent[i]?sessionProgress -> do 
 		                                     :: goto waiting_for_ok;						/* session progress */
-		                                     :: atomic{agent2proxy[i]!cancel; goto waiting_for_canceled;}	/* cancel session initiation */
+		                                     :: atomic{cancelsent[i] == 0 ->agent2proxy[i]!cancel; cancelsent[i]=1; goto waiting_for_canceled;}	/* cancel session initiation */
 		                                     od;
 	    :: proxy2agent[i]?serverError -> invitesent[i]=0; goto idle;					/* server error */                                     
 	    :: proxy2agent[i]?ok -> do 
 		                        :: atomic {agent2agent[j]!ack; goto media_session_client;}				/* session is initiated */
-		                        :: atomic{agent2proxy[i]!cancel; goto waiting_for_canceled;}	/* cancel session initiation */
+		                        :: atomic{cancelsent[i] == 0 ->agent2proxy[i]!cancel; cancelsent[i]=1; goto waiting_for_canceled;}	/* cancel session initiation */
 		                        od;
 	    :: proxy2agent[i]?inviteFail -> invitesent[i]=0; goto idle;					/* invitation rejected */
 	    ::do
@@ -122,16 +124,16 @@ proctype agent(byte i) {
 	    if
 	    :: proxy2agent[i]?trying -> do 
 		                            :: goto waiting_for_session_progress;		/* receive trying from proxy */
-		                            :: atomic{agent2proxy[i]!cancel; goto waiting_for_canceled;}	/* cancel session initiation */
+		                            :: atomic{cancelsent[i] == 0 ->agent2proxy[i]!cancel; cancelsent[i]=1; goto waiting_for_canceled;}	/* cancel session initiation */
 		                            od;	
 	    :: proxy2agent[i]?sessionProgress -> do 
 		                                     :: goto waiting_for_ok;						/* session progress */
-		                                     :: atomic{agent2proxy[i]!cancel; goto waiting_for_canceled;}	/* cancel session initiation */
+		                                     :: atomic{cancelsent[i] == 0 ->agent2proxy[i]!cancel; cancelsent[i]=1; goto waiting_for_canceled;}	/* cancel session initiation */
 		                                     od;
 		:: proxy2agent[i]?serverError -> invitesent[i]=0; goto idle;					/* server error */                                     
 	    :: proxy2agent[i]?ok -> do 
 		                        :: atomic {agent2agent[j]!ack; goto media_session_client;}				/* session is initiated */
-		                        :: atomic{agent2proxy[i]!cancel; goto waiting_for_canceled;}	/* cancel session initiation */
+		                        :: atomic{cancelsent[i] == 0 ->agent2proxy[i]!cancel; cancelsent[i]=1; goto waiting_for_canceled;}	/* cancel session initiation */
 		                        od;
 	    :: proxy2agent[i]?inviteFail -> invitesent[i]=0; goto idle;		
 	    :: proxy2agent[i]?cancel -> atomic{agent2proxy[i]!canceled; goto idle;} 					/* canceled by client */
@@ -144,16 +146,16 @@ proctype agent(byte i) {
 		if
 		:: proxy2agent[i]?trying -> do 
 		                            :: goto waiting_for_session_progress;		/* receive trying from proxy */
-		                            :: atomic{agent2proxy[i]!cancel; goto waiting_for_canceled;}	/* cancel session initiation */
+		                            :: atomic{cancelsent[i] == 0 ->agent2proxy[i]!cancel; cancelsent[i]=1; goto waiting_for_canceled;}	/* cancel session initiation */
 		                            od;	
 	    :: proxy2agent[i]?sessionProgress -> do 
 		                                     :: goto waiting_for_ok;						/* session progress */
-		                                     :: atomic{agent2proxy[i]!cancel; goto waiting_for_canceled;}	/* cancel session initiation */
+		                                     :: atomic{cancelsent[i] == 0 ->agent2proxy[i]!cancel; cancelsent[i]=1; goto waiting_for_canceled;}	/* cancel session initiation */
 		                                     od;
 		:: proxy2agent[i]?serverError -> invitesent[i]=0; goto idle;					/* server error */                                     
 	    :: proxy2agent[i]?ok -> do 
 		                        :: atomic {agent2agent[j]!ack; goto media_session_client;}				/* session is initiated */
-		                        :: atomic{agent2proxy[i]!cancel; goto waiting_for_canceled;}	/* cancel session initiation */
+		                        :: atomic{cancelsent[i] == 0 ->agent2proxy[i]!cancel; cancelsent[i]=1; goto waiting_for_canceled;}	/* cancel session initiation */
 		                        od;
 	    :: proxy2agent[i]?inviteFail -> invitesent[i]=0; goto idle;		
 		:: proxy2agent[i]?cancel ->  atomic{agent2proxy[i]!canceled; goto idle;} 					/* canceled by client */
@@ -169,16 +171,16 @@ proctype agent(byte i) {
 		if 
 		:: proxy2agent[i]?trying -> do 
 		                            :: goto waiting_for_session_progress;		/* receive trying from proxy */
-		                            :: atomic{agent2proxy[i]!cancel; goto waiting_for_canceled;}	/* cancel session initiation */
+		                            :: atomic{cancelsent[i] == 0 ->agent2proxy[i]!cancel; cancelsent[i]=1; goto waiting_for_canceled;}	/* cancel session initiation */
 		                            od;	
 	    :: proxy2agent[i]?sessionProgress -> do 
 		                                     :: goto waiting_for_ok;						/* session progress */
-		                                     :: atomic{agent2proxy[i]!cancel; goto waiting_for_canceled;}	/* cancel session initiation */
+		                                     :: atomic{cancelsent[i] == 0 ->agent2proxy[i]!cancel; cancelsent[i]=1; goto waiting_for_canceled;}	/* cancel session initiation */
 		                                     od;
 		:: proxy2agent[i]?serverError -> invitesent[i]=0; goto idle;					/* server error */                                     
 	    :: proxy2agent[i]?ok -> do 
 		                        :: atomic {agent2agent[j]!ack; goto media_session_client;}				/* session is initiated */
-		                        :: atomic{agent2proxy[i]!cancel; goto waiting_for_canceled;}	/* cancel session initiation */
+		                        :: atomic{cancelsent[i] == 0 ->agent2proxy[i]!cancel; cancelsent[i]=1; goto waiting_for_canceled;}	/* cancel session initiation */
 		                        od;
 	    :: proxy2agent[i]?inviteFail -> invitesent[i]=0; goto idle;		
 		:: agent2agent[i]?byeOk -> atomic {invitesent[j]=0; goto idle;}							/* session terminated */
