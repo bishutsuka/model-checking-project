@@ -208,6 +208,13 @@ proctype agent(byte i) {
 		                                               :: cancelsent[i] == 0 -> agent2proxy[i]!cancel; cancelsent[i]=1; goto waiting_for_canceled;	/* cancel session initiation */
 		                                               od;
 		                                            fi;}
+        :: atomic{proxy2agent[i]?ok -> if 
+		                               :: cancelsent[i] == 1 -> goto waiting_for_canceled;
+		                               :: do 
+		                                  :: cancelsent[i] == 0 -> agent2agent[j]!ack; goto media_session_client;			/* session is initiated */
+		                                  :: cancelsent[i] == 0 -> agent2proxy[i]!cancel; cancelsent[i]=1; goto waiting_for_canceled;	/* cancel session initiation */
+		                                  od;
+		                               fi;}
 		:: atomic{proxy2agent[i]?serverError -> if 
 		                                        :: cancelsent[i] == 1 -> goto waiting_for_canceled;
 		                                        :: cancelsent[i] == 0 -> invitesent[i]=0; goto idle;					/* server error */
@@ -216,7 +223,7 @@ proctype agent(byte i) {
 		                               :: cancelsent[i] == 1 -> goto waiting_for_canceled;
 		                               :: do 
 		                                  :: cancelsent[i] == 0 -> agent2agent[j]!ack; goto media_session_client;			/* session is initiated */
-		                                  :: cancelsent[i] == 0 ->agent2proxy[i]!cancel; cancelsent[i]=1; goto waiting_for_canceled;	/* cancel session initiation */
+		                                  :: cancelsent[i] == 0 -> agent2proxy[i]!cancel; cancelsent[i]=1; goto waiting_for_canceled;	/* cancel session initiation */
 		                                  od;
 		                               fi;}
 	    :: atomic{proxy2agent[i]?inviteFail -> if
@@ -265,3 +272,4 @@ init {
 }
 ltl p1 {<> (agent[0]@media_session_client && agent[0]@media_session_server)}
 ltl p2 {[] ((agent[0]@inviting -> <> (invitesent[0]== 0 && agent[0]@idle)) && (agent[1]@inviting -> <> (invitesent[1]== 0 && agent[1]@idle)))}
+ltl p3 {[]((!(cancelsent[0]== 1 && agent[0]@media_session_client)) && (!(cancelsent[0]== 1 && agent[0]@media_session_client)))}
