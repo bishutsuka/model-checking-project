@@ -1,0 +1,98 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 2.8 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \sortlist[entry]{nty/global/}
+    \entry{modelchecking}{book}{}
+      \name{author}{2}{}{%
+        {{hash=7725f3db070a985fe46a5feb0bcee960}{%
+           family={Baier},
+           familyi={B\bibinitperiod},
+           given={Christel},
+           giveni={C\bibinitperiod}}}%
+        {{hash=392d5825b15ef7f81f68632c7a49fdef}{%
+           family={Katoen},
+           familyi={K\bibinitperiod},
+           given={Joost-Pieter},
+           giveni={J\bibinithyphendelim P\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {The MIT Press}%
+      }
+      \strng{namehash}{89a25b516e2b4c8733def01ee561abfe}
+      \strng{fullhash}{89a25b516e2b4c8733def01ee561abfe}
+      \strng{authornamehash}{89a25b516e2b4c8733def01ee561abfe}
+      \strng{authorfullhash}{89a25b516e2b4c8733def01ee561abfe}
+      \field{sortinit}{B}
+      \field{sortinithash}{5f6fa000f686ee5b41be67ba6ff7962d}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Principles of Model Checking}
+      \field{year}{2008}
+    \endentry
+    \entry{sip}{book}{}
+      \name{author}{1}{}{%
+        {{hash=af72f184ae7b97155d71f04d9586a6bd}{%
+           family={Johnston},
+           familyi={J\bibinitperiod},
+           given={Alan\bibnamedelima B.},
+           giveni={A\bibinitperiod\bibinitdelim B\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Artech House}%
+      }
+      \strng{namehash}{af72f184ae7b97155d71f04d9586a6bd}
+      \strng{fullhash}{af72f184ae7b97155d71f04d9586a6bd}
+      \strng{authornamehash}{af72f184ae7b97155d71f04d9586a6bd}
+      \strng{authorfullhash}{af72f184ae7b97155d71f04d9586a6bd}
+      \field{sortinit}{J}
+      \field{sortinithash}{c86bd6cced82a15683b396c2169909ef}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{edition}{3}
+      \field{title}{Understanding the Session Initiation Protocl}
+      \field{year}{2009}
+    \endentry
+    \entry{leue}{unpublished}{}
+      \name{author}{1}{}{%
+        {{hash=376fb12c39e7842d84b8e24069d9d289}{%
+           family={Leue},
+           familyi={L\bibinitperiod},
+           given={Prof.\bibnamedelimi Stefan},
+           giveni={P\bibinitperiod\bibinitdelim S\bibinitperiod}}}%
+      }
+      \list{institution}{1}{%
+        {University of Konstanz}%
+      }
+      \strng{namehash}{376fb12c39e7842d84b8e24069d9d289}
+      \strng{fullhash}{376fb12c39e7842d84b8e24069d9d289}
+      \strng{authornamehash}{376fb12c39e7842d84b8e24069d9d289}
+      \strng{authorfullhash}{376fb12c39e7842d84b8e24069d9d289}
+      \field{sortinit}{L}
+      \field{sortinithash}{7bba64db83423e3c29ad597f3b682cf3}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Course Project Model Checking of Software, WS 2017/18}
+      \field{title}{Model Checking the SIP Protocol with Spin}
+      \field{year}{2017}
+    \endentry
+  \endsortlist
+\endrefsection
+\endinput
+
