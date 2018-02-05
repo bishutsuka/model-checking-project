@@ -272,7 +272,7 @@ init {
 }
 
 ltl p1 { (invitesent[0] == 1 && invitesent[1]==1) -> []<>(agent[0]@media_session_client && agent[1]@media_session_client)}
-ltl p2 { [](agent[0]@inviting -> <>(agent[0]@idle)) && [](agent[0]@inviting -> <>(agent[0]@idle))}
+ltl p2 { [](agent[0]@inviting -> <>(agent[0]@idle && invitesent[0]==1)) && [](agent[0]@inviting -> <>(agent[0]@idle  && invitesent[1]==1))}
 ltl p3 { []((!(cancelsent[0] == 1 && agent[0]@media_session_client)) && (!(cancelsent[0] == 1 && agent[0]@media_session_client))) }
 ltl p4 { [](agent[0]@inviting -> <>(agent[0]@inviting && (!agent[0]@inviting U agent[0]@idle))) && [](agent[1]@inviting -> <>(agent[1]@inviting && (!agent[1]@inviting U agent[1]@idle))) }
 
